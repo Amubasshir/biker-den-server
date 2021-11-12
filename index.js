@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -17,14 +18,55 @@ async function run()
     {
         await client.connect();
         const database = client.db('biker_den');
-        const reviewCollection = database.collection('review');
+      const reviewCollection = database.collection('review');
+      const productCollection = database.collection('product');
+      const usersCollection = database.collection('users');
 
-        app.post("/addReview", (req, res) => {
-    console.log(req.body);
-    reviewCollection.insertOne(req.body).then((result) => {
-      res.send(result.insertedCount > 0);
-      console.log(result.insertedCount > 0);
-    });
+        app.get('/product', async (req, res) => {
+            const cursor = productCollection.find({});
+            const product = await cursor.toArray();
+            res.send(product);
+        });
+
+      
+       // GET Single product
+        app.get('/product/:id', async (req, res) => {
+            const name = req.params.name;
+           
+            const query = { name: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.json(product);
+        })
+      
+      
+
+
+   app.post('/product', async (req, res) => {
+            const product = req.body;
+            console.log('hit the post api', product);
+
+            const result = await productCollection.insertOne(product);
+            console.log(result);
+            res.json(result)
+   });
+      
+        // app.get('/users/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { email: email };
+        //     const user = await usersCollection.findOne(query);
+        //     let isAdmin = false;
+        //     if (user?.role === 'admin') {
+        //         isAdmin = true;
+        //     }
+        //     res.json({ admin: isAdmin });
+        // })
+      
+      
+       app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            
+            res.json(result);
         });
         
 
