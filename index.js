@@ -52,16 +52,7 @@ async function run()
             res.json(result)
    });
       
-        // app.get('/users/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     const query = { email: email };
-        //     const user = await usersCollection.findOne(query);
-        //     let isAdmin = false;
-        //     if (user?.role === 'admin') {
-        //         isAdmin = true;
-        //     }
-        //     res.json({ admin: isAdmin });
-        // })
+       
       
 
 
@@ -71,7 +62,53 @@ async function run()
       const result = await orderCollection.insertOne(order);
       res.json(result);
     });
+        
+    //      // Checking is user are Admin
+    // app.get("/users/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   let isAdmin = false;
+    //   if (user?.role === "admin") {
+    //     isAdmin = true;
+    //   }
+    //   res.json({ admin: isAdmin });
+    // });
+        
+        
+         // GET All User Orders
+    app.get("/myOrders", async (req, res) => {
+      const result = await orderCollection.find({}).toArray();
+      res.send(result);
+    });
+        
+    // GET Single User Orders
+    app.get("/myOrders/:email", async (req, res) => {
+      const result = await orderCollection
+        .find({ email: req.params.email })
+        .toArray();
+      res.send(result);
+    });
+        
+        
+        
 
+        
+            // GET All User Orders
+    app.get("/myOrders", async (req, res) => {
+      const result = await orderCollection.find({}).toArray();
+      res.send(result);
+    });
+        
+         // GET Single User Orders
+    app.get("/myOrders/:email", async (req, res) => {
+      const result = await orderCollection
+        .find({ email: req.params.email })
+        .toArray();
+      res.send(result);
+    });
+        
+        
           // Update Order Status
     app.put("/updateStatus/:id", (req, res) => {
       const id = req.params.id;
@@ -89,21 +126,71 @@ async function run()
     });
 
 
-      
+      // USER POST API
        app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
-            
+            console.log(result)
             res.json(result);
-        });
+       });
+        
+            // USER UPDATE API
+    app.put("/users", async (req, res) => {
+      const user = req.body;
+      const filter = { email: user.email };
+      const options = { upsert: true };
+      const updateDoc = { $set: user };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.json(result);
+    });
         
 
-app.get("/ClientReview", (req, res) => {
+
+        //GET Reviews API
+app.get("/clientReview", (req, res) => {
     reviewCollection.find({}).toArray((err, documents) => {
       res.send(documents);
     });
   });
 
+        
+        
+    // POST Single Review API
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.json(result);
+    });
+        
+        
+        
+          app.put("/users/admin", async (req, res) => {
+      const user = req.body;
+      const requester = req.decodedEmail;
+      if (requester) {
+        const requesterAccount = await usersCollection.findOne({
+          email: requester,
+        });
+        if (requesterAccount.role === "admin") {
+          const filter = { email: user.email };
+          const updateDoc = { $set: { role: "admin" } };
+          const result = await usersCollection.updateOne(filter, updateDoc);
+          res.json(result);
+        }
+      } else {
+        res
+          .status(403)
+          .json({ message: "you do not have access to make admin" });
+      }
+    });
+        
+        
+        
+        
 
     }
     finally
