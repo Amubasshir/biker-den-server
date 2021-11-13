@@ -19,9 +19,11 @@ async function run()
         await client.connect();
         const database = client.db('biker_den');
       const reviewCollection = database.collection('review');
-      const productCollection = database.collection('product');
+        const productCollection = database.collection('product');
+         const orderCollection = database.collection("orders");
       const usersCollection = database.collection('users');
 
+        // get products
         app.get('/product', async (req, res) => {
             const cursor = productCollection.find({});
             const product = await cursor.toArray();
@@ -30,13 +32,13 @@ async function run()
 
       
        // GET Single product
-        app.get('/product/:id', async (req, res) => {
-            const name = req.params.name;
-           
-            const query = { name: ObjectId(id) };
-            const product = await productCollection.findOne(query);
-            res.json(product);
-        })
+            app.get("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const singleProduct = await productCollection.findOne(query);
+      // console.log('load user with id: ', id);
+      res.send(singleProduct);
+    });
       
       
 
@@ -61,6 +63,32 @@ async function run()
         //     res.json({ admin: isAdmin });
         // })
       
+
+
+// POST Orders API
+    app.post("/orders", async (req, res) => {
+      const order = req.body;
+      const result = await orderCollection.insertOne(order);
+      res.json(result);
+    });
+
+          // Update Order Status
+    app.put("/updateStatus/:id", (req, res) => {
+      const id = req.params.id;
+      const updatedStatus = req.body.status;
+      console.log(updatedStatus);
+      const filter = { _id: ObjectId(id) };
+      console.log(updatedStatus);
+      orderCollection
+        .updateOne(filter, {
+          $set: { status: updatedStatus },
+        })
+        .then((result) => {
+          res.send(result);
+        });
+    });
+
+
       
        app.post('/users', async (req, res) => {
             const user = req.body;
